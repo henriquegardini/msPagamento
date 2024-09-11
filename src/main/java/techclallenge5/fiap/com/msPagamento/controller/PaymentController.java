@@ -2,11 +2,14 @@ package techclallenge5.fiap.com.msPagamento.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import techclallenge5.fiap.com.msPagamento.dto.PaymentRequestDTO;
-import techclallenge5.fiap.com.msPagamento.dto.PaymentResponseDTO;
+import techclallenge5.fiap.com.msPagamento.dto.response.PaymentPixResponseDTO;
+import techclallenge5.fiap.com.msPagamento.dto.request.PaymentRequestDTO;
+import techclallenge5.fiap.com.msPagamento.dto.response.PaymentResponseDTO;
+import techclallenge5.fiap.com.msPagamento.dto.request.PaymentUpdateMethodRequestDTO;
 import techclallenge5.fiap.com.msPagamento.model.Payment;
 import techclallenge5.fiap.com.msPagamento.model.PaymentMethod;
 import techclallenge5.fiap.com.msPagamento.service.PaymentServiceImpl;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @RestController
 @RequestMapping("/payment")
@@ -18,30 +21,32 @@ public class PaymentController {
     }
 
     @PostMapping
-    public ResponseEntity<PaymentResponseDTO> createPayment(@RequestBody PaymentRequestDTO payment) {
+    public ResponseEntity<?> createPayment(@RequestBody PaymentRequestDTO payment) {
       if(payment.paymentMethod()== PaymentMethod.PIX){
-          PaymentResponseDTO response = paymentServiceImpl.createPixPaymentOrder(payment);
-          return ResponseEntity.ok(response);
+          PaymentPixResponseDTO response = paymentServiceImpl.createPixPaymentOrder(payment);
+          return ResponseEntity.created(UriComponentsBuilder.fromPath("/payments/{id}").buildAndExpand(response.id()).toUri())
+                  .body(response);
       }
       PaymentResponseDTO response = paymentServiceImpl.createPaymentOrder(payment);
-      return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/{orderId}")
-    public ResponseEntity<PaymentResponseDTO> getPaymentByOrderId(@PathVariable String orderId) {
-        Payment payment = paymentServiceImpl.findPaymentByOrderId(orderId);
-        return ResponseEntity.ok(paymentServiceImpl.toDTO(payment));
+        return ResponseEntity.created(UriComponentsBuilder.fromPath("/payments/{id}").buildAndExpand(response.id()).toUri())
+                .body(response);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<PaymentResponseDTO> getPaymentById(@PathVariable String id) {
-        Payment payment = paymentServiceImpl.findPaymentById(id);
+    public ResponseEntity<PaymentResponseDTO> getPayment(@PathVariable String id,
+                                                         @RequestParam(required = false, defaultValue = "false") boolean byShoppingCartId) {
+        Payment payment;
+        if (byShoppingCartId) {
+            payment = paymentServiceImpl.findPaymentByOrderId(id);
+        } else {
+            payment = paymentServiceImpl.findPaymentById(id);
+        }
         return ResponseEntity.ok(paymentServiceImpl.toDTO(payment));
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<PaymentResponseDTO> updatePaymentMethodById(@PathVariable String id, @RequestBody PaymentRequestDTO paymentRequestDTO) {
-        PaymentResponseDTO payment = paymentServiceImpl.updatePaymentMethod(paymentRequestDTO);
+    @PatchMapping("/{id}")
+    public ResponseEntity<PaymentResponseDTO> updatePaymentMethodById(@PathVariable String id, @RequestBody PaymentUpdateMethodRequestDTO paymentUpdateRequestDTO) {
+        PaymentResponseDTO payment = paymentServiceImpl.updatePaymentMethod(paymentUpdateRequestDTO, id);
         return ResponseEntity.ok(payment);
     }
 

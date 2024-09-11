@@ -9,15 +9,14 @@ import java.util.Locale;
 @Component
 public class PixPayloadGenerator {
 
-    @Value("${pix.key}")
-    private static String pixKey;
+    @Value("${pixKey}")
+    private String pixKey;
 
+    @Value("${pixVendor}")
+    private String pixVendor;
 
-    @Value("${pix.vendor}")
-    private static String pixVendor;
-
-    @Value("${pix.city}")
-    private static String pixCity;
+    @Value("${pixCity}")
+    private String pixCity;
 
     private static String normalizeString(String input) {
         return input.replaceAll("[^0-9a-zA-Z]+", "").toUpperCase(Locale.ROOT);
@@ -44,7 +43,7 @@ public class PixPayloadGenerator {
         return String.format("%04X", crc).toUpperCase();
     }
 
-    public static String generatePayload(double value, String txId) {
+    public String generatePayload(double value, String txId) {
         String payload = "00020126330014BR.GOV.BCB.PIX0114" + pixKey;
         if (value > 0) {
             payload += "5204000053039865404" + String.format("%.2f", value).replace(",", ".");

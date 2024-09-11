@@ -1,0 +1,8 @@
+# Use a official base image
+FROM openjdk:21
+
+# Copy the jar file into the image
+COPY target/msPagamento-0.0.1-SNAPSHOT.jar msPagamento-0.0.1-SNAPSHOT.jar
+
+# Command to run the application
+CMD ["java", "-jar", "/msPagamento-0.0.1-SNAPSHOT.jar"]
