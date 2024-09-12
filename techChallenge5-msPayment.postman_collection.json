@@ -1,0 +1,379 @@
+{
+	"info": {
+		"_postman_id": "f1547787-5a60-4cf3-97c6-cd64e11571ab",
+		"name": "TechChallenge5",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "17034778"
+	},
+	"item": [
+		{
+			"name": "Create User",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"let requestBody = pm.request.body.raw;\r",
+							"let parsedBody = JSON.parse(requestBody);\r",
+							"pm.collectionVariables.set(\"passAdmin\", parsedBody.password);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"if (pm.response.code === 200) {\r",
+							"    var jsonData = pm.response.json();\r",
+							"    pm.collectionVariables.set(\"loginAdmin\", jsonData.login);\r",
+							"  \r",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"login\":\"login\",\r\n    \"password\":\"password\",\r\n    \"role\":\"ADMIN\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{msLogin}}/auth/register",
+					"host": [
+						"{{msLogin}}"
+					],
+					"path": [
+						"auth",
+						"register"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetToken",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"if (pm.response.code === 200) {\r",
+							"    var jsonData = pm.response.json();\r",
+							"    pm.collectionVariables.set(\"authToken\", jsonData.token);\r",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"login\":\"{{loginAdmin}}\",\r\n    \"password\":\"{{passAdmin}}\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{msLogin}}/auth/login",
+					"host": [
+						"{{msLogin}}"
+					],
+					"path": [
+						"auth",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Payment Order",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"if (pm.response.code === 201) {\r",
+							"    var jsonData = pm.response.json();\r",
+							"    pm.collectionVariables.set(\"paymentId\", jsonData.id);\r",
+							"    pm.collectionVariables.set(\"cartId\", jsonData.shoppingCartId);\r",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{authToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"shoppingCartId\":\"1\",\r\n    \"paymentMethod\":\"CREDIT_CARD\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{msPayment}}/payment",
+					"host": [
+						"{{msPayment}}"
+					],
+					"path": [
+						"payment"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create PIX Payment Order",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"if (pm.response.code === 201) {\r",
+							"    var jsonData = pm.response.json();\r",
+							"    pm.collectionVariables.set(\"paymentId\", jsonData.id);\r",
+							"    pm.collectionVariables.set(\"cartId\", jsonData.shoppingCartId);\r",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{authToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"shoppingCartId\":\"1\",\r\n    \"paymentMethod\":\"PIX\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{msPayment}}/payment",
+					"host": [
+						"{{msPayment}}"
+					],
+					"path": [
+						"payment"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Payment By CartId",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{msPayment}}/payment/{{cartId}}?byShoppingCartId=true",
+					"host": [
+						"{{msPayment}}"
+					],
+					"path": [
+						"payment",
+						"{{cartId}}"
+					],
+					"query": [
+						{
+							"key": "byShoppingCartId",
+							"value": "true"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Payment By Id",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{authToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{msPayment}}/payment/{{paymentId}}",
+					"host": [
+						"{{msPayment}}"
+					],
+					"path": [
+						"payment",
+						"{{paymentId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Process Payment",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{msPayment}}/payment/{{paymentId}}/process",
+					"host": [
+						"{{msPayment}}"
+					],
+					"path": [
+						"payment",
+						"{{paymentId}}",
+						"process"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Payment Method",
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"paymentMethod\":\"BOLETO\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{msPayment}}/payment/{{paymentId}}",
+					"host": [
+						"{{msPayment}}"
+					],
+					"path": [
+						"payment",
+						"{{paymentId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Payment",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"paymentMethod\":\"BOLETO\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{msPayment}}/payment/{{paymentId}}",
+					"host": [
+						"{{msPayment}}"
+					],
+					"path": [
+						"payment",
+						"{{paymentId}}"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "msLogin",
+			"value": "http://localhost:8080"
+		},
+		{
+			"key": "msPayment",
+			"value": "http://localhost:8084"
+		},
+		{
+			"key": "authToken",
+			"value": "'"
+		},
+		{
+			"key": "loginAdmin",
+			"value": ""
+		},
+		{
+			"key": "passAdmin",
+			"value": ""
+		},
+		{
+			"key": "paymentId",
+			"value": "1"
+		},
+		{
+			"key": "cartId",
+			"value": "1"
+		}
+	]
+}
