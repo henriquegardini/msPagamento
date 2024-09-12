@@ -1,5 +1,6 @@
 package techclallenge5.fiap.com.msPagamento.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import techclallenge5.fiap.com.msPagamento.util.pixUtil.PixPayloadGenerator;
 
@@ -12,7 +13,7 @@ public class PixService {
         this.pixPayloadGenerator = pixPayloadGenerator;
     }
 
-    public String createPixPayment(double valor, String transactionId) {
+    public String createPixCode(double valor, String transactionId) {
         String payload = pixPayloadGenerator.generatePayload(valor, transactionId);
         return payload;
     }

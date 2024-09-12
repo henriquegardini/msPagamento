@@ -2,17 +2,18 @@ package techclallenge5.fiap.com.msPagamento.service;
 
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
-import techclallenge5.fiap.com.msPagamento.dto.response.PaymentPixResponseDTO;
+import org.springframework.web.filter.RequestContextFilter;
 import techclallenge5.fiap.com.msPagamento.dto.request.PaymentRequestDTO;
-import techclallenge5.fiap.com.msPagamento.dto.response.PaymentResponseDTO;
 import techclallenge5.fiap.com.msPagamento.dto.request.PaymentUpdateMethodRequestDTO;
+import techclallenge5.fiap.com.msPagamento.dto.response.PaymentPixResponseDTO;
+import techclallenge5.fiap.com.msPagamento.dto.response.PaymentResponseDTO;
 import techclallenge5.fiap.com.msPagamento.exception.*;
-import techclallenge5.fiap.com.msPagamento.integration.ShoppingCartClient;
 import techclallenge5.fiap.com.msPagamento.model.Payment;
 import techclallenge5.fiap.com.msPagamento.model.PaymentMethod;
 import techclallenge5.fiap.com.msPagamento.model.PaymentStatus;
 import techclallenge5.fiap.com.msPagamento.model.ShoppingCart;
 import techclallenge5.fiap.com.msPagamento.repository.PaymentRepository;
+import techclallenge5.fiap.com.msPagamento.security.JwtAuthenticationFilter;
 import techclallenge5.fiap.com.msPagamento.util.pixUtil.PixPayloadGenerator;
 
 import java.time.LocalDateTime;
@@ -26,35 +27,44 @@ import static techclallenge5.fiap.com.msPagamento.model.PaymentStatus.FAILED;
 public class PaymentServiceImpl implements PaymentService {
     private final PaymentRepository paymentRepository;
     private final PixPayloadGenerator pixPayloadGenerator;
-    private final ShoppingCartClient shoppingCartClient;
+    private final PixService pixService;
+    private final ShoppingCartService shoppingCartService;
+    private final RequestContextFilter requestContextFilter;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    public PaymentServiceImpl(PaymentRepository paymentRepository, PixPayloadGenerator pixPayloadGenerator, ShoppingCartClient shoppingCartClient) {
+    public PaymentServiceImpl(PaymentRepository paymentRepository, PixPayloadGenerator pixPayloadGenerator, PixService pixService, ShoppingCartService shoppingCartService, RequestContextFilter requestContextFilter, JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.paymentRepository = paymentRepository;
         this.pixPayloadGenerator = pixPayloadGenerator;
-        this.shoppingCartClient = shoppingCartClient;
+        this.pixService = pixService;
+        this.shoppingCartService = shoppingCartService;
+        this.requestContextFilter = requestContextFilter;
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
     @Transactional
     public PaymentResponseDTO createPaymentOrder(PaymentRequestDTO paymentRequestDTO) {
-        validatePaymentCreation(paymentRequestDTO.orderId());
-//            ShoppingCart cart = shoppingCartClient.getCartDetails(paymentRequestDTO.orderId()).block();
-        ShoppingCart cart = new ShoppingCart("123", 1L, 239.90);
-        Payment payment = new Payment(paymentRequestDTO.orderId(), cart.getTotalAmount(), paymentRequestDTO.paymentMethod());
-        return toDTO(paymentRepository.save(payment));
+        validatePaymentCreation(paymentRequestDTO.shoppingCartId());
+        ShoppingCart cart = shoppingCartService.getCartDetails(paymentRequestDTO.shoppingCartId());
+        if (cart != null) {
+            Payment payment = new Payment(paymentRequestDTO.shoppingCartId(), cart.getTotalValue(), paymentRequestDTO.paymentMethod());
+            return toDTO(paymentRepository.save(payment));
+        }
+        throw new ShoppingCartNotFoundException();
     }
 
+    @Transactional
     public PaymentPixResponseDTO createPixPaymentOrder(PaymentRequestDTO paymentRequestDTO) {
-        validatePaymentCreation(paymentRequestDTO.orderId());
-        ShoppingCart cart = new ShoppingCart("123", 1L, 239.90);
-        Payment payment = new Payment(paymentRequestDTO.orderId(), cart.getTotalAmount(), paymentRequestDTO.paymentMethod());
+        validatePaymentCreation(paymentRequestDTO.shoppingCartId());
+        ShoppingCart cart = shoppingCartService.getCartDetails(paymentRequestDTO.shoppingCartId());
+        Payment payment = new Payment(paymentRequestDTO.shoppingCartId(), cart.getTotalValue(), paymentRequestDTO.paymentMethod());
         paymentRepository.save(payment);
-        String pixCode = pixPayloadGenerator.generatePayload(payment.getAmount(), payment.getId());
+        String pixCode = pixService.createPixCode(payment.getAmount(), payment.getId());
         return toPixDTO(payment, pixCode);
     }
 
     @Transactional
     public PaymentResponseDTO updatePaymentMethod(PaymentUpdateMethodRequestDTO paymentRequestDTO, String id) {
-        Payment payment = this.findPaymentById(id);
+        Payment payment = findPaymentById(id);
         validateUpdatePayment(payment.getOrderId(), paymentRequestDTO.paymentMethod());
         payment.setPaymentMethod(paymentRequestDTO.paymentMethod());
         payment.setPaymentStartDate(LocalDateTime.now());
@@ -71,7 +81,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Transactional
-    public PaymentResponseDTO processPayment(String id) {
+    public PaymentResponseDTO processPayment(String id, String token) {
         Payment payment = this.findPaymentById(id);
         validatePayment(payment.getOrderId());
         final double SUCCESS_RATE = 0.85;
@@ -79,8 +89,9 @@ public class PaymentServiceImpl implements PaymentService {
         boolean isSuccess = random.nextDouble() < SUCCESS_RATE;
         if (isSuccess) {
             payment.setPaymentStatus(COMPLETED);
-//            ShoppingCart cart = shoppingCartClient.getCartDetails(payment.getOrderId()).block();
-//            shoppingCartClient.updateCartStatus(cart.getUserId());
+            ShoppingCart cart = shoppingCartService.getCartDetails(payment.getOrderId());
+            String authToken = token;
+            shoppingCartService.updateCartStatus(cart.getUserId(), authToken);
         } else {
             payment.setPaymentStatus(FAILED);
         }
@@ -105,7 +116,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     private void validatePayment(String orderId) {
-        Payment payment = this.findPaymentByOrderId(orderId);
+        Payment payment = findPaymentByOrderId(orderId);
         if (payment == null) {
             throw new PaymentNotFoundException();
         }
@@ -119,20 +130,21 @@ public class PaymentServiceImpl implements PaymentService {
 
     private void validatePaymentCreation(String orderId) {
         Optional<Payment> payment = paymentRepository.findByOrderId(orderId);
-        if(payment.isPresent()){
+        if (payment.isPresent()) {
             throw new PaymentAlreadyCreatedException();
-        };
+        }
+        ;
     }
 
     private void validateUpdatePayment(String orderId, PaymentMethod paymentRequestMethod) {
-        Payment payment = this.findPaymentByOrderId(orderId);
+        Payment payment = findPaymentByOrderId(orderId);
         if (payment == null) {
             throw new PaymentNotFoundException();
         }
         if (payment.getPaymentStatus() == COMPLETED) {
             throw new PaymentInvalidStatusException();
         }
-        if(payment.getPaymentMethod() == paymentRequestMethod){
+        if (payment.getPaymentMethod() == paymentRequestMethod) {
             throw new PaymentInvalidMethodTransitionException();
         }
     }
@@ -148,7 +160,7 @@ public class PaymentServiceImpl implements PaymentService {
                 payment.getPaymentDueDate());
     }
 
-    public PaymentPixResponseDTO toPixDTO (Payment payment, String pixCode){
+    public PaymentPixResponseDTO toPixDTO(Payment payment, String pixCode) {
         return new PaymentPixResponseDTO(
                 payment.getId(),
                 payment.getOrderId(),

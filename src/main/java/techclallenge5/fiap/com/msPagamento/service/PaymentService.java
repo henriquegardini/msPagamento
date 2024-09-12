@@ -10,5 +10,5 @@ public interface PaymentService {
     PaymentPixResponseDTO createPixPaymentOrder(PaymentRequestDTO paymentRequestDTO);
     PaymentResponseDTO updatePaymentMethod(PaymentUpdateMethodRequestDTO paymentRequestDTO, String id);
     void deletePayment(String id);
-    PaymentResponseDTO processPayment(String id);
+    PaymentResponseDTO processPayment(String id, String token);
 }

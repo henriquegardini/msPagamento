@@ -9,16 +9,16 @@ The microservice **msPagamento** is developed in Java and Spring Boot. It simula
 
 - **Payment Order creation:** Creation of payment orders.
 - **Payment process:** This simulates the payment. Since it's only for educational purposes, the success of a payment it's random and has 85% chance of being completed.
-- **Payment updates:** It's possible to update payment's method and statuses(through previous functionality).
+- **Payment updates:** It's possible to update payment's method (using an endpoint) and statuses (through previous functionality).
 - **PIX "Copia e Cola" generator:** msPagamento generates automatically the "PIX Copia e Cola" code.
 
-## Requisitos
+## Requirements
 
 - Java 21+
 - Spring Boot 3.x
 - Maven 3.x
 
-## Estrutura do Projeto
+## Project Structure
 
 - **Controller:** HTTP management layer.
 - **Service:** Business logic layer - includes validation such as states transitions, due dates, input data.
@@ -74,12 +74,18 @@ The microservice **msPagamento** is developed in Java and Spring Boot. It simula
 - **POST /payment:** Creates a payment order. Returns the payment order created - if valid -.
 - **POST /payment/{paymentId}/process:** Process payment order and returns if valid.
 - **GET /payment/{paymentId}:** Returns payment with id = paymentId.
-- **DEL /payment/{paymentId}:** Deletes payment with id = paymentId.
+  - **DEL /payment/{paymentId}:** Deletes payment with id = paymentId.
 
-  ### JSON Collection:
-      For user convenience, there is a JSON collection inside the project with all requests that can be done.
-      It's using environment variables to facilitates the requests being done.
-      For example, the first request creates the user at msLogin, then the second request it's already 
-      configured to use login and password from the first request.
-      Another example is that when a payment order is created, the id is saved at the colletionsVariables and
-      can will be used automatically at other requests until a new payment order is created.
+### JSON Collection:
+<small>Note: it's configured to be used at POSTMAN</small>
+
+    For user convenience, there is a JSON collection inside the project with all requests that can be done.
+    
+    It's using environment variables to facilitates the requests being done.
+    
+    For example, the first request creates the user at msLogin, then the second request - regarding token 
+      retrieval it's already configured to use login and password from the first request.
+    
+    Another example is that when a payment order is created, the id is saved at the colletionsVariables and
+      will be used automatically at other requests until a new payment order is created.
+  

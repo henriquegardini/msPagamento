@@ -11,8 +11,8 @@ public class OpenAPIConfig {
     @Bean
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
-                .info(new Info().title("API de Exemplo")
+                .info(new Info().title("Payment API")
                         .version("1.0")
-                        .description("Descrição da API de Exemplo"));
+                        .description("This API contains solutions for payments."));
     }
 }

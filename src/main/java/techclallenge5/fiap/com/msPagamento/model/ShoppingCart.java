@@ -10,5 +10,5 @@ import lombok.NoArgsConstructor;
 public class ShoppingCart {
     private String id;
     private Long userId;
-    private double totalAmount;
+    private double totalValue;
 }

@@ -1,8 +1,29 @@
-# Use a official base image
+# Etapa de Build: Usando uma imagem Maven para compilar o projeto
+FROM maven:3.8.7-eclipse-temurin-17 AS build
+
+# Definindo o diretório de trabalho
+WORKDIR /app
+
+# Copiando o arquivo pom.xml e outras configurações necessárias
+COPY pom.xml ./
+
+# Baixando as dependências necessárias
+RUN mvn dependency:go-offline -B
+
+# Copiando o código-fonte do projeto
+COPY src ./src
+
+# Executando o build do Maven para gerar o arquivo JAR
+RUN mvn clean package -DskipTests
+
+# Etapa de Execução: Usando uma imagem mais leve apenas com o JRE
 FROM openjdk:21
 
-# Copy the jar file into the image
-COPY target/msPagamento-0.0.1-SNAPSHOT.jar msPagamento-0.0.1-SNAPSHOT.jar
+# Definindo o diretório de trabalho para a imagem final
+WORKDIR /app
 
-# Command to run the application
-CMD ["java", "-jar", "/msPagamento-0.0.1-SNAPSHOT.jar"]
+# Copiando o arquivo JAR gerado da etapa de build para a nova imagem
+COPY --from=build /app/target/msPagamento-0.0.1-SNAPSHOT.jar msPagamento-0.0.1-SNAPSHOT.jar
+
+# Comando para rodar a aplicação
+CMD ["java", "-jar", "msPagamento-0.0.1-SNAPSHOT.jar"]

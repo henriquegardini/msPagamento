@@ -104,9 +104,9 @@
 					}
 				},
 				"url": {
-					"raw": "{{msPayment}}/auth/login",
+					"raw": "{{msLogin}}/auth/login",
 					"host": [
-						"{{msPayment}}"
+						"{{msLogin}}"
 					],
 					"path": [
 						"auth",
@@ -149,7 +149,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"orderId\":\"1\",\r\n    \"paymentMethod\":\"CREDIT_CARD\"\r\n}",
+					"raw": "{\r\n    \"shoppingCartId\":\"1\",\r\n    \"paymentMethod\":\"CREDIT_CARD\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -201,7 +201,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"orderId\":\"2\",\r\n    \"paymentMethod\":\"PIX\"\r\n}",
+					"raw": "{\r\n    \"shoppingCartId\":\"1\",\r\n    \"paymentMethod\":\"PIX\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"

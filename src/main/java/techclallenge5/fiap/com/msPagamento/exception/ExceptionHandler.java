@@ -20,32 +20,38 @@ public class ExceptionHandler {
         return getStandardErrorResponseEntity(request, status, ex.getMessage(), ex);
     }
 
-    @org.springframework.web.bind.annotation.ExceptionHandler(PaymentNotFoundException.class)
+    @org.springframework.web.bind.annotation.ExceptionHandler
     public ResponseEntity<StandardError> handlePaymentNotFoundException(final PaymentNotFoundException ex, HttpServletRequest request) {
         HttpStatus status = HttpStatus.NOT_FOUND;
         return getStandardErrorResponseEntity(request, status, ex.getMessage(), ex);
     }
 
     @org.springframework.web.bind.annotation.ExceptionHandler
-    public ResponseEntity<StandardError> handlePaymentExpiredException(final PaymentExpiredException ex, HttpServletRequest request){
+    public ResponseEntity<StandardError> handleShoppingCartNotFoundException(final ShoppingCartNotFoundException ex, HttpServletRequest request) {
+        HttpStatus status = HttpStatus.NOT_FOUND;
+        return getStandardErrorResponseEntity(request, status, ex.getMessage(), ex);
+    }
+
+    @org.springframework.web.bind.annotation.ExceptionHandler
+    public ResponseEntity<StandardError> handlePaymentExpiredException(final PaymentExpiredException ex, HttpServletRequest request) {
         HttpStatus status = HttpStatus.BAD_REQUEST;
         return getStandardErrorResponseEntity(request, status, ex.getMessage(), ex);
     }
 
     @org.springframework.web.bind.annotation.ExceptionHandler
-    public ResponseEntity<StandardError> handlePaymentAlreadyCreatedException(final PaymentAlreadyCreatedException ex, HttpServletRequest request){
+    public ResponseEntity<StandardError> handlePaymentAlreadyCreatedException(final PaymentAlreadyCreatedException ex, HttpServletRequest request) {
         HttpStatus status = HttpStatus.BAD_REQUEST;
         return getStandardErrorResponseEntity(request, status, ex.getMessage(), ex);
     }
 
     @org.springframework.web.bind.annotation.ExceptionHandler
-    public ResponseEntity<StandardError> handlePaymentInvalidMethodException(final PaymentInvalidMethodException ex, HttpServletRequest request){
+    public ResponseEntity<StandardError> handlePaymentInvalidMethodException(final PaymentInvalidMethodException ex, HttpServletRequest request) {
         HttpStatus status = HttpStatus.BAD_REQUEST;
         return getStandardErrorResponseEntity(request, status, ex.getMessage(), ex);
     }
 
     @org.springframework.web.bind.annotation.ExceptionHandler
-    public ResponseEntity<StandardError> handlePaymentInvalidMethodTransitionException(final PaymentInvalidMethodTransitionException ex, HttpServletRequest request){
+    public ResponseEntity<StandardError> handlePaymentInvalidMethodTransitionException(final PaymentInvalidMethodTransitionException ex, HttpServletRequest request) {
         HttpStatus status = HttpStatus.BAD_REQUEST;
         return getStandardErrorResponseEntity(request, status, ex.getMessage(), ex);
     }
@@ -61,9 +67,10 @@ public class ExceptionHandler {
         validateError.setMessage(e.getMessage());
         validateError.setPath(request.getRequestURI());
 
-        for (FieldError f: e.getBindingResult().getFieldErrors()) {
+        for (FieldError f : e.getBindingResult().getFieldErrors()) {
             validateError.addMessages(f.getField(), f.getDefaultMessage());
-        };
+        }
+        ;
 
         return ResponseEntity.status(status).body(validateError);
     }

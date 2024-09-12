@@ -51,8 +51,9 @@ public class PaymentController {
     }
 
     @PostMapping("/{id}/process")
-    public ResponseEntity<PaymentResponseDTO> processPayment(@PathVariable String id){
-        PaymentResponseDTO payment = paymentServiceImpl.processPayment(id);
+    public ResponseEntity<PaymentResponseDTO> processPayment(@PathVariable String id, @RequestHeader("Authorization") String authToken){
+
+        PaymentResponseDTO payment = paymentServiceImpl.processPayment(id, authToken);
         return ResponseEntity.ok(payment);
     }
 

@@ -11,13 +11,17 @@ services:
     ports:
       - "5432:5432"
 
-  msPagamento:
+  mspagamento:
     build: .
     ports:
       - "8084:8084"
     environment:
       PORT: 8084
       SPRING_PROFILES_ACTIVE: prod
+      PIXKEY: pixKeyExample@example.com  # Definindo a variável de ambiente
+      PIXVENDOR: pixVendorName
+      PIXCITY: pixVendorCity
+      API_SECURITY_TOKEN_SECRET: secretDefault
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/db
       SPRING_DATASOURCE_USERNAME: userAdmin
       SPRING_DATASOURCE_PASSWORD: userAdmin
